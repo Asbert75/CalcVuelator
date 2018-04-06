@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>CalcVuelator</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+	<script>
+	window.addEventListener('load', () => {
+		new Vue({
+			el: '#root',
+			data: {
+                input: "",
+                calculation: [],
+                history: [],
+                hideSqrt: true,
+                operator: "+",
+                prevClick: "operator",
+                value: 0,
+                calculated: 0
+            },
+            methods: {
+                clear: function() {
+                    this.input = ""
+                    this.calculation = []
+                    this.hideSqrt = true
+                    this.operator = "+"
+                    this.prevClick = "operator"
+                    this.value = 0
+                    this.calculated = 0
+                },
+                getSqrtAvailability: function(x) {
+                    if(isNaN(Math.sqrt(x))) {
+                        this.hideSqrt = true;
+                    }
+                    else {
+                        this.hideSqrt = false;
+                    }
+                },
+                isOperator: function(val) {
+                    if(["+", "-", "*", "/", "power", "sqrt"].indexOf(val) !== -1) {
+                        return true
+                    }
+                    else {
+                        return false
+                    }
+                },
+                handleOperator: function(operator) {
+                    this.handleInput()
+                    
+                    if(this.prevClick !== "operator") {
+                        this.operator = operator
+                        this.calculation.push(this.operator)
+                    }
+
+                    this.prevClick = "operator"
+                    this.$refs.numbers.focus()
+                },
+                handleAddition: function() {
+                    this.handleOperator("+")
+                },
+                handleSubtraction: function() {
+                    this.handleOperator("-")
+                },
+                handleMultiplication: function() {
+                    this.handleOperator("*")
+                },
+                handleDivision: function() {
+                    this.handleOperator("/")
+                },
+                handleSquareRoot: function() {
+                    this.handleInput()
+                    this.calculation.pop()
+                    this.calculation.push("√(" + this.calculated + ")")
+                    this.calculated = Math.sqrt(this.calculated)
+                },
+                handleSquared: function() {
+                    this.handleInput()
+                    this.calculation.pop()
+                    this.calculation.push("(" + this.calculated + ")^2")
+                    this.calculated = Math.pow(this.calculated, 2)
+                },
+                handleEquals: function() {
+                    this.handleInput()
+                    
+                    if(this.calculation.length > 2) {
+                        this.calculation.push("=")
+                        this.calculation.push(this.calculated)
+                        this.history.push(this.calculation.join(" "))
+                        this.calculation = [this.calculated]
+
+                        this.$refs.numbers.focus()
+                    }
+                },
+                handleInput: function() {
+                    if(this.input !== "") {
+                        if(this.prevClick !== "number") {
+                            // Save the value and reset input
+                            this.value = (this.input-0)
+                            this.input = ""
+
+                            if(this.operator === "+") {
+                                this.calculated = this.calculated + this.value
+                            }
+                            else if(this.operator === "-") {
+                                this.calculated = this.calculated - this.value
+                            }
+                            else if(this.operator === "*") {
+                                this.calculated = this.calculated * this.value
+                            }
+                            else if(this.operator === "/") {
+                                this.calculated = this.calculated / this.value
+                            }
+
+                            this.prevClick = "number"
+                            this.calculation.push(this.value)
+                        }
+
+                        this.getSqrtAvailability(this.calculated)
+                    }
+                }
+            },
+            mounted: function() {
+                this.$refs.numbers.focus()
+            }
+		});
+	});
+	</script>
+</head>
+<body>
+    <div id="root">
+        <div class="main">
+            <div id="calculator">
+                <h2 class="header">CalcVuelator</h2>
+                <div class="row values">
+                    <p class="history"><span>{{ calculated }}</span></p>
+                    <input type="number" ref="numbers" v-model="input" v-on:keyup.enter="handleInput" placeholder="0" />
+                </div>
+                <div class="row buttons">
+                    <button v-on:click="clear">C</button>
+                    <button v-bind:class="{'hidden': hideSqrt}" v-on:click="handleSquareRoot">√</button>
+                    <button v-on:click="handleSquared">x<span class="squared">2</span></button>
+                    <button v-on:click="handleEquals">=</button>
+                    <button v-on:click="handleAddition">+</button>
+                    <button v-on:click="handleSubtraction">-</button>
+                    <button v-on:click="handleMultiplication">×</button>
+                    <button v-on:click="handleDivision">÷</button>
+                </div>
+                <div class="calculationHistory row">
+                    <h3 v-if="history.length > 0">History</h3>
+                    <ul>
+                        <li v-for="equation in history"> {{ equation }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
